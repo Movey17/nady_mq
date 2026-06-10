@@ -728,6 +728,20 @@
 </div>
 
 <script>
+/* ── BROWSER COMPATIBILITY ADAPTER ── */
+if (!window.storage) {
+  window.storage = {
+    get: async (key) => {
+      const val = localStorage.getItem(key);
+      return val ? { value: val } : null;
+    },
+    set: async (key, value) => {
+      localStorage.setItem(key, value);
+      return true;
+    }
+  };
+}
+
 /* ──────────────── STATE ──────────────── */
 const KEY_ITEMS    = 'wq_items';
 const KEY_SETTINGS = 'wq_settings';
@@ -750,7 +764,6 @@ async function load() {
     if (sr) settings = { ...settings, ...JSON.parse(sr.value) };
     if (!pr) await window.storage.set(KEY_PW, DEFAULT_PW, true);
   } catch(e) {
-    // first run
     await window.storage.set(KEY_PW, DEFAULT_PW, true);
   }
   renderTeam();
@@ -809,7 +822,6 @@ function isRevealed(weekKey) {
   if (yr > nowYr) return false;
   if (wn < nowWk) return true;
   if (wn > nowWk) return false;
-  // same week: check reveal day
   const rd = Number(settings.revealDay);
   return now.getDay() >= rd;
 }
@@ -989,7 +1001,6 @@ function renderSchedulePreview() {
     </div>
   `).join('');
 
-  // stats
   document.getElementById('statTotal').textContent = items.length;
   document.getElementById('statThisWeek').textContent = items.filter(i => i.week === currentWeekKey()).length;
   document.getElementById('statVisible').textContent = items.filter(i => isRevealed(i.week)).length;
